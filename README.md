@@ -7,6 +7,8 @@ This pipeline performs:
 - Alignment statistics (flagstat)
 - Aggregated reporting (MultiQC)
 
+NB as is, for toy dataset (config file allows scalable resources: mem, ncpus etc)
+
 ## Expected output
 
 After running, you should see:
@@ -17,7 +19,9 @@ After running, you should see:
 - `results/multiqc/multiqc_report.html` → aggregated report  
 
 # Usage
+```bash
 nextflow run main.nf -profile docker
+```
 
 # Inputs
 - FASTQ files: data/Hd4*_{1,2}.fastq.gz
