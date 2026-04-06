@@ -97,7 +97,7 @@ done
 
 
 # 5. unzip reference genome
-gunzip Homo_sapiens.GRCh38.dna.primary_assembly.fa
+gunzip Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
 
 # 6. create index files for reference
 bwa index Homo_sapiens.GRCh38.dna.primary_assembly.fa
