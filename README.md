@@ -7,8 +7,7 @@ This pipeline performs:
 - Alignment statistics (flagstat)
 - Aggregated reporting (MultiQC)
 
-NB as is, for toy dataset (config file allows scalable resources: `mem`, `ncpus` etc)
-It is designed for scalable use in multiple environments
+NB as is, for toy dataset (config file allows scalable resources: `mem`, `ncpus` etc) - it is designed for scalable use in multiple environments
 
 ## Expected output
 
