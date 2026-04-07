@@ -8,6 +8,7 @@ This pipeline performs:
 - Aggregated reporting (MultiQC)
 
 NB as is, for toy dataset (config file allows scalable resources: `mem`, `ncpus` etc)
+It is designed for scalable use in multiple environments
 
 ## Expected output
 

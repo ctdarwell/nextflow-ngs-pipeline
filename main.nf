@@ -35,6 +35,7 @@ workflow {
 }
 
 process FASTQC {
+    label 'low'
     publishDir "${params.outdir}/fastqc", mode: 'copy'
     tag "${sample_id}"
 
@@ -51,8 +52,8 @@ process FASTQC {
 }
 
 process ALIGN {
+    label 'high'
     tag "${sample_id}"
-    cpus 3
 
     input:
     tuple val(sample_id), path(reads)
@@ -68,6 +69,7 @@ process ALIGN {
 }
 
 process SAMTOOLS_VIEW {
+    label 'medium'
     publishDir "${params.outdir}/bam", mode: 'copy'
     tag "${sample_id}"
 
@@ -84,6 +86,7 @@ process SAMTOOLS_VIEW {
 }
 
 process SORT_BAM {
+    label 'high'
     publishDir "${params.outdir}/bam", mode: 'copy'
     tag "${sample_id}"
 
@@ -100,6 +103,7 @@ process SORT_BAM {
 }
 
 process INDEX_BAM {
+    label 'low'
     publishDir "${params.outdir}/bam", mode: 'copy'
     tag "${sample_id}"
 
@@ -116,6 +120,7 @@ process INDEX_BAM {
 }
 
 process FLAGSTAT {
+    label 'low'
     publishDir "${params.outdir}/flagstat", mode: 'copy'
     tag "${sample_id}"
 
@@ -132,6 +137,7 @@ process FLAGSTAT {
 }
 
 process MULTIQC {
+    label 'low'
     publishDir "${params.outdir}/multiqc", mode: 'copy'
 
     input:
