@@ -6,7 +6,7 @@ params.outdir = "results"
 
 workflow {
 
-    // ✅ FIX: no checkIfExists
+    // input reads
     reads_ch = Channel.fromFilePairs(params.reads)
 
     // bundle reference + index files
