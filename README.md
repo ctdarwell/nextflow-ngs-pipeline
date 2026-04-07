@@ -20,7 +20,7 @@ After running, you should see:
 
 # Usage
 ```bash
-nextflow run main.nf -profile docker
+nextflow run main.nf
 ```
 
 # Inputs

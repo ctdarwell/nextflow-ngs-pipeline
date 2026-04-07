@@ -1,34 +1,48 @@
 nextflow.enable.dsl=2
 
-params.reads = "${projectDir}/data/Hd4*_{1,2}.fastq.gz"
-params.ref   = "${projectDir}/data/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
+params.reads  = "${projectDir}/data/Hd4*_{1,2}.fastq.gz"
+params.ref    = "${projectDir}/data/Homo_sapiens.GRCh38.dna.primary_assembly.fa"
 params.outdir = "results"
 
 workflow {
 
+    // ✅ FIX: no checkIfExists
     reads_ch = Channel.fromFilePairs(params.reads)
-    ref_ch   = Channel.fromPath("${params.ref}*").collect()
 
+    // bundle reference + index files
+    ref_ch = Channel.fromPath("${params.ref}*").collect()
+
+    // QC
     qc_out = FASTQC(reads_ch)
 
+    // Alignment
     sam_ch = ALIGN(reads_ch, ref_ch)
-    bam_ch = SAMTOOLS_VIEW(sam_ch)
-    stats  = FLAGSTAT(bam_ch)
 
-    all_qc = qc_out.mix(stats)
+    // BAM processing
+    bam_ch     = SAMTOOLS_VIEW(sam_ch)
+    sorted_ch  = SORT_BAM(bam_ch)
+    indexed_ch = INDEX_BAM(sorted_ch)
 
-    MULTIQC(all_qc.collect())
+    // Stats (on sorted BAM)
+    stats_ch = FLAGSTAT(sorted_ch)
+
+    // Collect QC inputs properly
+    fastqc_files = qc_out.map { it[1] }
+    qc_files = fastqc_files.mix(stats_ch).collect()
+
+    // MultiQC
+    MULTIQC(qc_files)
 }
 
 process FASTQC {
     publishDir "${params.outdir}/fastqc", mode: 'copy'
-    tag "$sample_id"
+    tag "${sample_id}"
 
     input:
     tuple val(sample_id), path(reads)
 
     output:
-    path "*_fastqc.{html,zip}"
+    tuple val(sample_id), path("*_fastqc.*")
 
     script:
     """
@@ -37,8 +51,7 @@ process FASTQC {
 }
 
 process ALIGN {
-    tag "$sample_id"
-
+    tag "${sample_id}"
     cpus 3
 
     input:
@@ -46,7 +59,7 @@ process ALIGN {
     path ref_files
 
     output:
-    path "${sample_id}.sam"
+    tuple val(sample_id), path("${sample_id}.sam")
 
     script:
     """
@@ -56,33 +69,65 @@ process ALIGN {
 
 process SAMTOOLS_VIEW {
     publishDir "${params.outdir}/bam", mode: 'copy'
-	tag "${sam.baseName}"
+    tag "${sample_id}"
 
     input:
-    path sam
+    tuple val(sample_id), path(sam)
 
     output:
-    path "${sam.baseName}.bam"
+    tuple val(sample_id), path("${sample_id}.bam")
 
     script:
     """
-    samtools view -Sb ${sam} > ${sam.baseName}.bam
+    samtools view -Sb ${sam} > ${sample_id}.bam
+    """
+}
+
+process SORT_BAM {
+    publishDir "${params.outdir}/bam", mode: 'copy'
+    tag "${sample_id}"
+
+    input:
+    tuple val(sample_id), path(bam)
+
+    output:
+    tuple val(sample_id), path("${sample_id}.sorted.bam")
+
+    script:
+    """
+    samtools sort ${bam} -o ${sample_id}.sorted.bam
+    """
+}
+
+process INDEX_BAM {
+    publishDir "${params.outdir}/bam", mode: 'copy'
+    tag "${sample_id}"
+
+    input:
+    tuple val(sample_id), path(bam)
+
+    output:
+    tuple val(sample_id), path("${sample_id}.sorted.bam.bai")
+
+    script:
+    """
+    samtools index ${bam}
     """
 }
 
 process FLAGSTAT {
     publishDir "${params.outdir}/flagstat", mode: 'copy'
-	tag "${bam.baseName}"
+    tag "${sample_id}"
 
     input:
-    path bam
+    tuple val(sample_id), path(bam)
 
     output:
-    path "*.flagstat"
+    path "${sample_id}.flagstat"
 
     script:
     """
-    samtools flagstat ${bam} > ${bam}.flagstat
+    samtools flagstat ${bam} > ${sample_id}.flagstat
     """
 }
 
@@ -97,6 +142,6 @@ process MULTIQC {
 
     script:
     """
-	multiqc ${qc_files} -o .
+    multiqc . -o .
     """
 }
